@@ -390,8 +390,21 @@ int main(int argc, char *argv[])
     return 0;
 }
 #elif ASS_FUZZMODE == FUZZMODE_LIBFUZZER
+#include <libgen.h>
+int LLVMFuzzerInitialize(int *argc, char ***argv) {
+  char *exe_path = strdup((*argv)[0]);
+  char *dir = dirname(exe_path);
+  char fontpath[100];
+  sprintf(fontpath, "%s/fonts.conf", dir);
+  setenv("FONTCONFIG_FILE", fontpath, true);
+  return 0;
+}
+
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+    char *fontpath = getenv("FONTCONFIG_FILE");
+    printf("%s\n", fontpath);
+    fflush(stdout);
     // OSS Fuzz docs recommend just returning 0 on too large input
     // libFuzzer docs tell us to use -1 to prevent addition to corpus
     // BUT HongFuzz' LLVMFuzzerTestOneInput hook can't handle it and
